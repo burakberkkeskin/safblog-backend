@@ -15,7 +15,16 @@ func RegisterController(c *fiber.Ctx) error {
 	if err != nil {
 		return err
 	}
-	response := services.CreateUser(registerUser)
+	response, err := services.CreateUser(registerUser)
+	if err != nil {
+		if err.Error() == "error while hashing the password" {
+			c.Status(500).JSON(response)
+		} else if err.Error() == "email already in use" {
+			c.Status(409).JSON(response)
+		} else {
+			c.Status(400).JSON(response)
+		}
+	}
 	c.JSON(response)
 	return nil
 }
