@@ -6,6 +6,7 @@ import (
 	"os"
 	"safblog-backend/database"
 	"safblog-backend/models"
+	"strconv"
 	"time"
 
 	"github.com/gofiber/fiber/v2"
@@ -85,12 +86,17 @@ func LoginUser(loginUser models.LoginUser) (models.Response, error) {
 		err := "credentials are not valid"
 		return models.Response{Message: "failed to authenticate user", Error: err}, errors.New(err)
 	}
-
+	jwtHour, err := strconv.Atoi(os.Getenv("JWTHOUR"))
+	if err != nil {
+		err := "JWTHOUR env value is not integer"
+		fmt.Println(err)
+		return CreateResponse("internal server error", nil, ""), errors.New(err)
+	}
 	claims := jwt.MapClaims{
 		"id":    dbUser.ID,
 		"email": dbUser.Email,
 		"admin": false,
-		"exp":   time.Now().Add(time.Hour * 72).Unix(),
+		"exp":   time.Now().Add(time.Hour * time.Duration(jwtHour)).Unix(),
 	}
 
 	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)

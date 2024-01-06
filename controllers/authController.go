@@ -45,7 +45,7 @@ func LoginController(c *fiber.Ctx) error {
 		} else if err.Error() == "credentials are not valid" {
 			c.Status(401).JSON(response)
 		} else {
-			return c.Status(500).JSON(models.Response{Message: "error", Error: "Something happened while logging in."})
+			return c.Status(500).JSON(response)
 		}
 	}
 	c.JSON(response)
