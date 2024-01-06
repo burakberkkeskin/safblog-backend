@@ -1,7 +1,11 @@
 package models
 
+import (
+	"github.com/gofiber/fiber/v2"
+)
+
 type Response struct {
-	Status string `json:"status"`
-	Data   string `json:"Data"`
-	Error  string `json:"Error"`
+	Message string    `json:"message"`
+	Data    fiber.Map `json:"data"`
+	Error   string    `json:"error"`
 }

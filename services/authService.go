@@ -5,8 +5,10 @@ import (
 	"fmt"
 	"safblog-backend/database"
 	"safblog-backend/models"
+	"time"
 
-	"github.com/gofiber/fiber/v2/log"
+	"github.com/gofiber/fiber/v2"
+	jwt "github.com/golang-jwt/jwt/v4"
 	"github.com/google/uuid"
 	"golang.org/x/crypto/bcrypt"
 )
@@ -26,14 +28,13 @@ func CreateUser(registeredUser models.RegisterModel) (models.Response, error) {
 	db.Find(&dbEmailUser, "email = ?", registeredUser.Email)
 	if dbEmailUser.Email != "" {
 		err := "email already in use"
-		return models.Response{Status: "failed to create user", Error: err}, errors.New(err)
+		return models.Response{Message: "failed to create user", Error: err}, errors.New(err)
 	}
 
 	hash, err := saltAndHash(registeredUser.Password)
 	if err != nil {
 		error := "error while hashing the password"
-		log.Errorf("%s", error)
-		return models.Response{Status: "failed to has password", Error: error}, errors.New(error)
+		return models.Response{Message: "failed to has password", Error: error}, errors.New(error)
 	}
 
 	user.Password = hash
@@ -41,10 +42,10 @@ func CreateUser(registeredUser models.RegisterModel) (models.Response, error) {
 	err = db.Create(&user).Error
 	if err != nil {
 		error := "could not create user"
-		return models.Response{Status: "failed to create user", Error: error, Data: err.Error()}, errors.New(error)
+		return models.Response{Message: "failed to create user", Error: error}, errors.New(error)
 	}
 
-	return models.Response{Status: "user created", Data: "user created."}, nil
+	return models.Response{Message: "user created", Data: fiber.Map{"message": "user created."}}, nil
 }
 
 func saltAndHash(password string) (string, error) {
@@ -73,17 +74,36 @@ func LoginUser(loginUser models.LoginUser) (models.Response, error) {
 
 	if dbUser.ID == uuid.Nil {
 		err := "user not found"
-		return models.Response{Status: "failed to find user", Error: err}, errors.New(err)
+		return CreateResponse("failed to find user", nil, err), errors.New(err)
+		//return models.Response{Message: "failed to find user", Error: err}, errors.New(err)
 	}
 
 	isPasswordValid := verifyPassword(dbUser.Password, []byte(loginUser.Password))
 
 	if !isPasswordValid {
 		err := "credentials are not valid"
-		return models.Response{Status: "failed to authenticate user", Error: err}, errors.New(err)
+		return models.Response{Message: "failed to authenticate user", Error: err}, errors.New(err)
 	}
 
-	fmt.Println(dbUser)
+	claims := jwt.MapClaims{
+		"id":    dbUser.ID,
+		"email": dbUser.Email,
+		"admin": false,
+		"exp":   time.Now().Add(time.Hour * 72).Unix(),
+	}
 
-	return models.Response{Status: "user login success", Data: "{token: abcd}"}, nil
+	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
+	// Generate encoded token and send it as response.
+
+	t, err := token.SignedString([]byte("secret"))
+	if err != nil {
+		return models.Response{Message: "failed to create jwt signed token", Error: err.Error()}, errors.New(err.Error())
+	}
+
+	return models.Response{
+		Message: "user login success",
+		Data: fiber.Map{
+			"token": t,
+		},
+	}, nil
 }

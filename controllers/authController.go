@@ -6,6 +6,7 @@ import (
 	"safblog-backend/services"
 
 	"github.com/gofiber/fiber/v2"
+	jwt "github.com/golang-jwt/jwt/v4"
 )
 
 func RegisterController(c *fiber.Ctx) error {
@@ -44,9 +45,18 @@ func LoginController(c *fiber.Ctx) error {
 		} else if err.Error() == "credentials are not valid" {
 			c.Status(401).JSON(response)
 		} else {
-			return c.Status(500).JSON(models.Response{Status: "error", Error: "Something happened while logging in."})
+			return c.Status(500).JSON(models.Response{Message: "error", Error: "Something happened while logging in."})
 		}
 	}
 	c.JSON(response)
+	return nil
+}
+
+func WhoAmIController(c *fiber.Ctx) error {
+	user := c.Locals("user").(*jwt.Token)
+	claims := user.Claims.(jwt.MapClaims)
+	userEmail := claims["email"].(string)
+	userId := claims["id"].(string)
+	c.SendString("Welcome 👋" + userEmail + " " + userId)
 	return nil
 }
