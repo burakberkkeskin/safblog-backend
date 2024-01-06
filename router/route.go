@@ -2,6 +2,7 @@ package router
 
 import (
 	"fmt"
+	"os"
 	"safblog-backend/controllers"
 	"safblog-backend/middlewares"
 
@@ -12,7 +13,7 @@ func SetupRoutes(app *fiber.App) {
 	// grouping
 	fmt.Println("Setting up routes")
 	fmt.Println("Getting routes ready.")
-	jwtMiddleware := middlewares.NewAuthMiddleware("secret")
+	jwtMiddleware := middlewares.NewAuthMiddleware(os.Getenv("JWTSECRET"))
 
 	api := app.Group("/api")
 	version := api.Group("/v1")

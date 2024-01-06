@@ -1,7 +1,7 @@
 {
     "client": "Thunder Client",
     "collectionName": "Auth",
-    "dateExported": "2024-01-06T15:00:49.553Z",
+    "dateExported": "2024-01-06T16:45:24.420Z",
     "version": "1.1",
     "folders": [],
     "requests": [
@@ -33,13 +33,31 @@
             "method": "POST",
             "sortNum": 20000,
             "created": "2023-12-30T14:54:51.650Z",
-            "modified": "2024-01-06T15:00:18.189Z",
+            "modified": "2024-01-06T16:41:39.581Z",
             "headers": [],
             "params": [],
             "body": {
                 "type": "json",
                 "raw": "{\n  \"email\": \"burakberkkeskin@gmail.com\",\n  \"password\": \"Test1234\"\n}",
                 "form": []
+            },
+            "tests": []
+        },
+        {
+            "_id": "0ad79834-17fc-4777-b8f4-67837ea36f54",
+            "colId": "9e0cf4e9-7d1a-410f-ab72-ec5d22d7504a",
+            "containerId": "",
+            "name": "Who Am I",
+            "url": "http://127.0.0.1:8080/api/v1/auth/whoami",
+            "method": "GET",
+            "sortNum": 30000,
+            "created": "2024-01-06T16:15:15.582Z",
+            "modified": "2024-01-06T16:45:16.284Z",
+            "headers": [],
+            "params": [],
+            "auth": {
+                "type": "bearer",
+                "bearer": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJhZG1pbiI6ZmFsc2UsImVtYWlsIjoiYnVyYWtiZXJra2Vza2luQGdtYWlsLmNvbSIsImV4cCI6MTcwNDgxODY4OSwiaWQiOiI0OTU0ZjNhZS0yOGZlLTQzMjAtODRkZC04MTYxMTc3ZDc1NDQifQ.ofZeMjjQrLj1Gk2doQCekvq8_LZ6J6izyo_T8Kml0RQ"
             },
             "tests": []
         }

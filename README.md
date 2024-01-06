@@ -26,11 +26,17 @@ docker compose up -d
 - Create a `.env` file.
 
 ```env
+# JWT Values
+JWTSECRET="secretvalue"
+
+# Database Values
 DB_HOST=127.0.0.1
 DB_PORT=5432
 DB_USER=postgresuser
 DB_PASSWORD=postgrespasswd
 DB_NAME=safblog
+
+
 ```
 
 - Run `air` in the repo

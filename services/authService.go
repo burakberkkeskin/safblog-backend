@@ -3,6 +3,7 @@ package services
 import (
 	"errors"
 	"fmt"
+	"os"
 	"safblog-backend/database"
 	"safblog-backend/models"
 	"time"
@@ -95,7 +96,7 @@ func LoginUser(loginUser models.LoginUser) (models.Response, error) {
 	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
 	// Generate encoded token and send it as response.
 
-	t, err := token.SignedString([]byte("secret"))
+	t, err := token.SignedString([]byte(os.Getenv("JWTSECRET")))
 	if err != nil {
 		return models.Response{Message: "failed to create jwt signed token", Error: err.Error()}, errors.New(err.Error())
 	}
