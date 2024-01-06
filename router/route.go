@@ -13,9 +13,10 @@ func SetupRoutes(app *fiber.App) {
 	fmt.Println("Getting routes ready.")
 
 	api := app.Group("/api")
+	version := api.Group("/v1")
 
 	// routes
-	auth := api.Group("/auth")
+	auth := version.Group("/auth")
 	auth.Post("/register", controllers.RegisterController)
 	auth.Post("/login", controllers.LoginController)
 }

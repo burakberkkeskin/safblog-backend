@@ -26,14 +26,14 @@ func CreateUser(registeredUser models.RegisterModel) (models.Response, error) {
 	db.Find(&dbEmailUser, "email = ?", registeredUser.Email)
 	if dbEmailUser.Email != "" {
 		err := "email already in use"
-		return models.Response{Status: "error", Error: err}, errors.New(err)
+		return models.Response{Status: "failed to create user", Error: err}, errors.New(err)
 	}
 
 	hash, err := saltAndHash(registeredUser.Password)
 	if err != nil {
 		error := "error while hashing the password"
 		log.Errorf("%s", error)
-		return models.Response{Status: "error", Error: error}, errors.New(error)
+		return models.Response{Status: "failed to has password", Error: error}, errors.New(error)
 	}
 
 	user.Password = hash
@@ -41,10 +41,10 @@ func CreateUser(registeredUser models.RegisterModel) (models.Response, error) {
 	err = db.Create(&user).Error
 	if err != nil {
 		error := "could not create user"
-		return models.Response{Status: "error", Error: error, Data: err.Error()}, errors.New(error)
+		return models.Response{Status: "failed to create user", Error: error, Data: err.Error()}, errors.New(error)
 	}
 
-	return models.Response{Status: "success", Data: "User created."}, nil
+	return models.Response{Status: "user created", Data: "user created."}, nil
 }
 
 func saltAndHash(password string) (string, error) {
@@ -73,17 +73,17 @@ func LoginUser(loginUser models.LoginUser) (models.Response, error) {
 
 	if dbUser.ID == uuid.Nil {
 		err := "user not found"
-		return models.Response{Status: "error", Error: err}, errors.New(err)
+		return models.Response{Status: "failed to find user", Error: err}, errors.New(err)
 	}
 
 	isPasswordValid := verifyPassword(dbUser.Password, []byte(loginUser.Password))
 
 	if !isPasswordValid {
 		err := "credentials are not valid"
-		return models.Response{Status: "error", Error: err}, errors.New(err)
+		return models.Response{Status: "failed to authenticate user", Error: err}, errors.New(err)
 	}
 
 	fmt.Println(dbUser)
 
-	return models.Response{Status: "success", Data: "{token: abcd}"}, nil
+	return models.Response{Status: "user login success", Data: "{token: abcd}"}, nil
 }
