@@ -122,7 +122,7 @@ func LoginUser(loginUser models.LoginUser) (models.Response, error) {
 	}, nil
 }
 
-func CreateRootUser() (models.Response, error) {
+func CreateRootUser() error {
 	fmt.Println("Creating root user.")
 	rootUserUsername := config.Config("ROOT_USER_USERNAME")
 	rootUserEmail := config.Config("ROOT_USER_EMAIL")
@@ -133,31 +133,31 @@ func CreateRootUser() (models.Response, error) {
 		Email:    rootUserEmail,
 		Password: rootUserPassword,
 		IsAdmin:  true,
+		IsRoot:   true,
 	}
 
 	db := database.DB.Db
 
-	var dbEmailUser models.User
-	db.Find(&dbEmailUser, "email = ?", rootUserEmail)
-	if dbEmailUser.Email != "" {
-		err := "root user email already exists"
-		fmt.Println("")
-		return models.Response{Message: "failed to create root user", Error: err}, nil
+	var dbRootUser models.User
+	db.Find(&dbRootUser, "is_root = ?", true)
+	if dbRootUser.Email != "" {
+		fmt.Println("Root user already exists. Skipping.")
+		return nil
 	}
 
 	hash, err := saltAndHash(rootUserPassword)
 	if err != nil {
 		error := "error while hashing the root user password"
-		return models.Response{Message: "failed to hash root user password", Error: error}, errors.New(error)
+		return errors.New(error)
 	}
 	user.Password = hash
 
 	err = db.Create(&user).Error
 	if err != nil {
 		error := "could not create the root user"
-		return models.Response{Message: "failed to create root user", Error: error}, errors.New(error)
+		return errors.New(error)
 	}
 
-	return SuccessResponse("admin user created", fiber.Map{"message": "admin user created"}), nil
+	return nil
 	//return services.SuccessResponse("admin user created")
 }

@@ -1,6 +1,7 @@
 package main
 
 import (
+	"fmt"
 	"safblog-backend/database"
 	"safblog-backend/router"
 	"safblog-backend/services"
@@ -12,9 +13,9 @@ func main() {
 	database.Connect()
 	app := fiber.New()
 	router.SetupRoutes(app)
-	_, err := services.CreateRootUser()
+	err := services.CreateRootUser()
 	if err != nil {
-
+		fmt.Println("Error while creating the root user: ", err)
 	}
 	app.Listen(":8080")
 }
