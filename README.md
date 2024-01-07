@@ -28,6 +28,7 @@ docker compose up -d
 ```env
 # JWT Values
 JWTSECRET="secretvalue"
+JWTHOUR="72"
 
 # Database Values
 DB_HOST=127.0.0.1
@@ -44,6 +45,16 @@ DB_NAME=safblog
 ```bash
 air
 ```
+
+## Request Examples
+
+- You can get and import the request examples from `./thunder-requests` directory.
+
+- Install the Thunder Client.
+
+  - Extension id: `rangav.vscode-thunder-client`
+
+- Import the collection from the directory.
 
 ## Docker image.
 
