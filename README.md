@@ -68,7 +68,7 @@ docker image build -t safblog-backend:latest .
 ### Run
 
 ```bash
-docker run --name safblog-backend --restart always safblog-backend:latest
+docker run --name safblog-backend --restart always -d --env-file .env --network safblog safblog-backend:latest
 ```
 
 ## Routes
