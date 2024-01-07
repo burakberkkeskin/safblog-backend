@@ -29,15 +29,16 @@ docker compose up -d
 # JWT Values
 JWTSECRET="secretvalue"
 JWTHOUR="72"
-
+# Root User Values
+ROOT_USER_USERNAME="safderun"
+ROOT_USER_EMAIL="user@gmail.com"
+ROOT_USER_PASSWORD="Test1234"
 # Database Values
 DB_HOST=127.0.0.1
 DB_PORT=5432
 DB_USER=postgresuser
 DB_PASSWORD=postgrespasswd
 DB_NAME=safblog
-
-
 ```
 
 - Run `air` in the repo
