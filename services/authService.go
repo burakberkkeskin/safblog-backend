@@ -33,6 +33,12 @@ func CreateUser(registeredUser models.RegisterModel) (models.Response, error) {
 		return models.Response{Message: "failed to create user", Error: err}, errors.New(err)
 	}
 
+	db.Find(&dbEmailUser, "id = ?", registeredUser.Username)
+	if dbEmailUser.Email != "" {
+		err := "username already in use"
+		return models.Response{Message: "failed to create user", Error: err}, errors.New(err)
+	}
+
 	hash, err := saltAndHash(registeredUser.Password)
 	if err != nil {
 		error := "error while hashing the password"
@@ -93,10 +99,11 @@ func LoginUser(loginUser models.LoginUser) (models.Response, error) {
 		return CreateResponse("internal server error", nil, ""), errors.New(err)
 	}
 	claims := jwt.MapClaims{
-		"id":    dbUser.ID,
-		"email": dbUser.Email,
-		"admin": false,
-		"exp":   time.Now().Add(time.Hour * time.Duration(jwtHour)).Unix(),
+		"id":       dbUser.ID,
+		"email":    dbUser.Email,
+		"username": dbUser.Username,
+		"isAdmin":  dbUser.IsAdmin,
+		"exp":      time.Now().Add(time.Hour * time.Duration(jwtHour)).Unix(),
 	}
 
 	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)

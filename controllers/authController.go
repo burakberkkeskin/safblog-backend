@@ -23,6 +23,8 @@ func RegisterController(c *fiber.Ctx) error {
 			c.Status(500).JSON(response)
 		case "email already in use":
 			c.Status(409).JSON(response)
+		case "username already in use":
+			c.Status(409).JSON(response)
 		default:
 			c.Status(400).JSON(response)
 		}
@@ -57,6 +59,14 @@ func WhoAmIController(c *fiber.Ctx) error {
 	claims := user.Claims.(jwt.MapClaims)
 	userEmail := claims["email"].(string)
 	userId := claims["id"].(string)
-	c.SendString("Welcome 👋" + userEmail + " " + userId)
+	userIsAdmin := claims["isAdmin"].(bool)
+	userUsername := claims["username"].(string)
+	response := services.SuccessResponse("hello user", fiber.Map{
+		"id":       userId,
+		"email":    userEmail,
+		"username": userUsername,
+		"isAdmin":  userIsAdmin,
+	})
+	c.JSON(response)
 	return nil
 }

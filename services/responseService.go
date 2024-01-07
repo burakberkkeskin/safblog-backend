@@ -14,3 +14,13 @@ func CreateResponse(message string, data fiber.Map, error string) models.Respons
 	}
 	return response
 }
+
+func SuccessResponse(message string, data fiber.Map) models.Response {
+	var response = CreateResponse(message, data, "")
+	return response
+}
+
+func ErrorResponse(message string, error string) models.Response {
+	var response = CreateResponse(message, nil, error)
+	return response
+}
