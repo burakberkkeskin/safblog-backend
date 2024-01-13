@@ -19,6 +19,12 @@ import (
 func CreateUser(registeredUser models.RegisterModel) (models.Response, error) {
 	fmt.Printf("Register running username: %s, email: %s, password: %s\n", registeredUser.Username, registeredUser.Email, registeredUser.Password)
 
+	// Check registeredUser.password and registeredUser.verifyPassword is same.
+	if registeredUser.Password != registeredUser.PasswordVerify {
+		err := "password and verify password is not same"
+		return models.Response{Message: "failed to create user", Error: err}, errors.New(err)
+	}
+
 	user := models.User{
 		Username: registeredUser.Username,
 		Email:    registeredUser.Email,
@@ -34,8 +40,8 @@ func CreateUser(registeredUser models.RegisterModel) (models.Response, error) {
 		return models.Response{Message: "failed to create user", Error: err}, errors.New(err)
 	}
 
-	db.Find(&dbEmailUser, "id = ?", registeredUser.Username)
-	if dbEmailUser.Email != "" {
+	db.Find(&dbEmailUser, "username = ?", registeredUser.Username)
+	if dbEmailUser.Username != "" {
 		err := "username already in use"
 		return models.Response{Message: "failed to create user", Error: err}, errors.New(err)
 	}
@@ -102,7 +108,7 @@ func LoginUser(loginUser models.LoginUser) (models.Response, error) {
 		"id":       dbUser.ID,
 		"email":    dbUser.Email,
 		"username": dbUser.Username,
-		"isAdmin":  dbUser.IsAdmin,
+		"role":     dbUser.Role,
 		"exp":      time.Now().Add(time.Hour * time.Duration(jwtHour)).Unix(),
 	}
 
@@ -132,7 +138,7 @@ func CreateRootUser() error {
 		Username: rootUserUsername,
 		Email:    rootUserEmail,
 		Password: rootUserPassword,
-		IsAdmin:  true,
+		Role:     "admin",
 		IsRoot:   true,
 	}
 

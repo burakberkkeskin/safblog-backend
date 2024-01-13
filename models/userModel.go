@@ -12,7 +12,7 @@ type User struct {
 	Username  string    `json:"username"`
 	Email     string    `json:"email"`
 	Password  string    `json:"password"`
-	IsAdmin   bool      `json:"isAdmin" gorm:"default:false"`
+	Role      string    `json:"role" gorm:"default:user"`
 	IsRoot    bool      `json:"isRoot" gorm:"default:false"`
 	CreatedAt time.Time
 	UpdatedAt time.Time
