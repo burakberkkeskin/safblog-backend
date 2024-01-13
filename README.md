@@ -71,6 +71,10 @@ docker image build -t safblog-backend:latest .
 docker run --name safblog-backend --restart always -d --env-file .env --network safblog -p 8080:8080 safblog-backend:latest
 ```
 
+## Database Structure
+
+https://dbdiagram.io/d/Safblog-Backend-65a2a07eac844320aed85626
+
 ## Routes
 
 You can find the routes under the directory.
