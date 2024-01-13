@@ -2,7 +2,7 @@ package controllers
 
 import (
 	"fmt"
-	"safblog-backend/models"
+	models "safblog-backend/models/user_models"
 	"safblog-backend/services"
 
 	"github.com/gofiber/fiber/v2"

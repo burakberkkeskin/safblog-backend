@@ -7,7 +7,7 @@ import (
 	"strconv"
 
 	"safblog-backend/config"
-	"safblog-backend/models"
+	models "safblog-backend/models/user_models"
 
 	"gorm.io/driver/postgres"
 	"gorm.io/gorm"

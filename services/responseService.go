@@ -1,13 +1,13 @@
 package services
 
 import (
-	"safblog-backend/models"
+	ResponseModels "safblog-backend/models/response_models"
 
 	"github.com/gofiber/fiber/v2"
 )
 
-func CreateResponse(message string, data fiber.Map, error string) models.Response {
-	var response = models.Response{
+func CreateResponse(message string, data fiber.Map, error string) ResponseModels.Response {
+	var response = ResponseModels.Response{
 		Message: message,
 		Data:    data,
 		Error:   error,
@@ -15,12 +15,12 @@ func CreateResponse(message string, data fiber.Map, error string) models.Respons
 	return response
 }
 
-func SuccessResponse(message string, data fiber.Map) models.Response {
+func SuccessResponse(message string, data fiber.Map) ResponseModels.Response {
 	var response = CreateResponse(message, data, "")
 	return response
 }
 
-func ErrorResponse(message string, error string) models.Response {
+func ErrorResponse(message string, error string) ResponseModels.Response {
 	var response = CreateResponse(message, nil, error)
 	return response
 }
