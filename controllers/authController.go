@@ -3,19 +3,34 @@ package controllers
 import (
 	"fmt"
 	models "safblog-backend/models/user_models"
+	validatorModels "safblog-backend/models/validator_models"
 	"safblog-backend/services"
 
+	"github.com/go-playground/validator/v10"
 	"github.com/gofiber/fiber/v2"
 	jwt "github.com/golang-jwt/jwt/v4"
 )
 
 func RegisterController(c *fiber.Ctx) error {
 	fmt.Println("Register Controller")
+	var Validator = validator.New()
+
+	var errors []*validatorModels.IError
+
 	var registerUser models.RegisterModel
-	err := c.BodyParser(&registerUser)
+	c.BodyParser(&registerUser)
+	err := Validator.Struct(registerUser)
 	if err != nil {
-		return err
+		for _, err := range err.(validator.ValidationErrors) {
+			var el validatorModels.IError
+			el.Field = err.Field()
+			el.Tag = err.Tag()
+			el.Value = err.Param()
+			errors = append(errors, &el)
+		}
+		return c.Status(fiber.StatusBadRequest).JSON(errors)
 	}
+
 	response, err := services.CreateUser(registerUser)
 	if err != nil {
 		switch err.Error() {
