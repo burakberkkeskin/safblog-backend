@@ -3,46 +3,168 @@ package services
 import (
 	"errors"
 	"fmt"
+	"os"
+	"safblog-backend/config"
 	"safblog-backend/database"
-	"safblog-backend/models"
+	ResponseModels "safblog-backend/models/response_models"
+	UserModels "safblog-backend/models/user_models"
+	"strconv"
+	"time"
 
+	"github.com/gofiber/fiber/v2"
+	jwt "github.com/golang-jwt/jwt/v4"
 	"github.com/google/uuid"
+	"golang.org/x/crypto/bcrypt"
 )
 
-func CreateUser(registeredUser models.RegisterModel) models.Response {
+func CreateUser(registeredUser UserModels.RegisterModel) (ResponseModels.Response, error) {
 	fmt.Printf("Register running username: %s, email: %s, password: %s\n", registeredUser.Username, registeredUser.Email, registeredUser.Password)
 
-	user := models.User{
+	// Check registeredUser.password and registeredUser.verifyPassword is same.
+	if registeredUser.Password != registeredUser.PasswordVerify {
+		err := "password and verify password is not same"
+		return ResponseModels.Response{Message: "failed to create user", Error: err}, errors.New(err)
+	}
+
+	user := UserModels.User{
 		Username: registeredUser.Username,
 		Email:    registeredUser.Email,
 		Password: registeredUser.Password,
 	}
+
 	db := database.DB.Db
-	err := db.Create(&user).Error
-	if err != nil {
-		return models.Response{Status: "error", Error: "Could not create user", Data: err.Error()}
+
+	var dbEmailUser UserModels.User
+	db.Find(&dbEmailUser, "email = ?", registeredUser.Email)
+	if dbEmailUser.Email != "" {
+		err := "email already in use"
+		return ResponseModels.Response{Message: "failed to create user", Error: err}, errors.New(err)
 	}
 
-	return models.Response{Status: "success", Data: "User created."}
+	db.Find(&dbEmailUser, "username = ?", registeredUser.Username)
+	if dbEmailUser.Username != "" {
+		err := "username already in use"
+		return ResponseModels.Response{Message: "failed to create user", Error: err}, errors.New(err)
+	}
+
+	hash, err := saltAndHash(registeredUser.Password)
+	if err != nil {
+		error := "error while hashing the password"
+		return ResponseModels.Response{Message: "failed to has password", Error: error}, errors.New(error)
+	}
+	user.Password = hash
+
+	err = db.Create(&user).Error
+	if err != nil {
+		error := "could not create user"
+		return ResponseModels.Response{Message: "failed to create user", Error: error}, errors.New(error)
+	}
+
+	return ResponseModels.Response{Message: "user created", Data: fiber.Map{"message": "user created."}}, nil
 }
 
-func LoginUser(loginUser models.LoginUser) (models.Response, error) {
+func saltAndHash(password string) (string, error) {
+	hash, err := bcrypt.GenerateFromPassword([]byte(password), bcrypt.MinCost)
+	return string(hash), err
+}
+
+func verifyPassword(hashedPwd string, plainPwd []byte) bool {
+	byteHash := []byte(hashedPwd)
+	err := bcrypt.CompareHashAndPassword(byteHash, plainPwd)
+	if err != nil {
+		fmt.Println(err)
+		return false
+	}
+
+	return true
+}
+
+func LoginUser(loginUser UserModels.LoginUser) (ResponseModels.Response, error) {
 	fmt.Printf("%s is logging in.\n", loginUser.Email)
 	db := database.DB.Db
 
-	var dbUser models.User
+	var dbUser UserModels.User
 
 	db.Find(&dbUser, "email = ?", loginUser.Email)
 
 	if dbUser.ID == uuid.Nil {
 		err := "user not found"
-		return models.Response{Status: "error", Error: err}, errors.New(err)
+		return CreateResponse("failed to find user", nil, err), errors.New(err)
+		//return models.Response{Message: "failed to find user", Error: err}, errors.New(err)
 	}
-	if dbUser.Password != loginUser.Password {
-		err := "credentials are not valid"
-		return models.Response{Status: "error", Error: err}, errors.New(err)
-	}
-	fmt.Println(dbUser)
 
-	return models.Response{Status: "success", Data: "{token: abcd}"}, nil
+	isPasswordValid := verifyPassword(dbUser.Password, []byte(loginUser.Password))
+
+	if !isPasswordValid {
+		err := "credentials are not valid"
+		return ResponseModels.Response{Message: "failed to authenticate user", Error: err}, errors.New(err)
+	}
+	jwtHour, err := strconv.Atoi(os.Getenv("JWTHOUR"))
+	if err != nil {
+		err := "JWTHOUR env value is not integer"
+		fmt.Println(err)
+		return CreateResponse("internal server error", nil, ""), errors.New(err)
+	}
+	claims := jwt.MapClaims{
+		"id":       dbUser.ID,
+		"email":    dbUser.Email,
+		"username": dbUser.Username,
+		"role":     dbUser.Role,
+		"exp":      time.Now().Add(time.Hour * time.Duration(jwtHour)).Unix(),
+	}
+
+	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
+	// Generate encoded token and send it as response.
+
+	t, err := token.SignedString([]byte(os.Getenv("JWTSECRET")))
+	if err != nil {
+		return ResponseModels.Response{Message: "failed to create jwt signed token", Error: err.Error()}, errors.New(err.Error())
+	}
+
+	return ResponseModels.Response{
+		Message: "user login success",
+		Data: fiber.Map{
+			"token": t,
+		},
+	}, nil
+}
+
+func CreateRootUser() error {
+	fmt.Println("Creating root user.")
+	rootUserUsername := config.Config("ROOT_USER_USERNAME")
+	rootUserEmail := config.Config("ROOT_USER_EMAIL")
+	rootUserPassword := config.Config("ROOT_USER_PASSWORD")
+
+	user := UserModels.User{
+		Username: rootUserUsername,
+		Email:    rootUserEmail,
+		Password: rootUserPassword,
+		Role:     "admin",
+		IsRoot:   true,
+	}
+
+	db := database.DB.Db
+
+	var dbRootUser UserModels.User
+	db.Find(&dbRootUser, "is_root = ?", true)
+	if dbRootUser.Email != "" {
+		fmt.Println("Root user already exists. Skipping.")
+		return nil
+	}
+
+	hash, err := saltAndHash(rootUserPassword)
+	if err != nil {
+		error := "error while hashing the root user password"
+		return errors.New(error)
+	}
+	user.Password = hash
+
+	err = db.Create(&user).Error
+	if err != nil {
+		error := "could not create the root user"
+		return errors.New(error)
+	}
+
+	return nil
+	//return services.SuccessResponse("admin user created")
 }
