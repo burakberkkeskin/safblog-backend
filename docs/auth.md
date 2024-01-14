@@ -4,13 +4,13 @@ You can find how the auth endpoints works here.
 
 Url prefix: `${apiUrl}/api/v1/auth
 
-### Register
+## Register
 
 Path: `/register`
 
 Method: `POST`
 
-#### Success Example Requests
+### Success Example Requests
 
 - Request
 
@@ -35,7 +35,7 @@ Response:
 }
 ```
 
-#### Request Field Details
+### Request Field Details
 
 Request Body Details:
 
@@ -104,4 +104,73 @@ Bad password response:
     "Value": ""
   }
 ]
+```
+
+## Login
+
+Path: `/login`
+
+Method: `POST`
+
+### Success Example Requests
+
+- Request
+
+```json
+{
+  "email": "burakberkkeskin@gmail.com",
+  "password": "Test1234"
+}
+```
+
+Response:
+
+```json
+{
+  "message": "user login success",
+  "data": {
+    "token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJlbWFpbCI6ImJ1cmFrQGdtYWlsLmNvbSIsImV4cCI6MTcwNTUwNTE2NCwiaWQiOiJiYjQxOTUyMy0xOGZmLTRjYmEtOTExMC1kNzJiZmI3NDQzNWYiLCJyb2xlIjoiYWRtaW4iLCJ1c2VybmFtZSI6InNhZmRlcnVuIn0.j51W9krrpNseOL8XMa1NRTDpwn-0woMCKWXiJw1L1As"
+  },
+  "error": ""
+}
+```
+
+### Request Field Details
+
+- `email`: Email value with valid email
+
+Bad email response:
+
+```json
+[
+  {
+    "Field": "Email",
+    "Tag": "email",
+    "Value": ""
+  }
+]
+```
+
+- `password` Password string.
+
+Bad password response:
+
+```json
+[
+  {
+    "Field": "Password",
+    "Tag": "required",
+    "Value": ""
+  }
+]
+```
+
+- Invalid credentials:
+
+```json
+{
+  "message": "failed to authenticate user",
+  "data": null,
+  "error": "credentials are not valid"
+}
 ```
