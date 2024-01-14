@@ -51,10 +51,24 @@ func RegisterController(c *fiber.Ctx) error {
 func LoginController(c *fiber.Ctx) error {
 	fmt.Println("Login Controller")
 	var loginUser models.LoginUser
-	err := c.BodyParser(&loginUser)
+
+	var errors []*validatorModels.IError
+
+	c.BodyParser(&loginUser)
+
+	var Validator = validator.New()
+	err := Validator.Struct(loginUser)
 	if err != nil {
-		return err
+		for _, err := range err.(validator.ValidationErrors) {
+			var el validatorModels.IError
+			el.Field = err.Field()
+			el.Tag = err.Tag()
+			el.Value = err.Param()
+			errors = append(errors, &el)
+		}
+		return c.Status(fiber.StatusBadRequest).JSON(errors)
 	}
+
 	response, err := services.LoginUser(loginUser)
 	if err != nil {
 		if err.Error() == "user not found" {
