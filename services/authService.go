@@ -10,6 +10,7 @@ import (
 	UserModels "safblog-backend/models/user_models"
 	"strconv"
 	"time"
+	"unicode"
 
 	"github.com/gofiber/fiber/v2"
 	jwt "github.com/golang-jwt/jwt/v4"
@@ -24,6 +25,14 @@ func CreateUser(registeredUser UserModels.RegisterModel) (ResponseModels.Respons
 	if registeredUser.Password != registeredUser.PasswordVerify {
 		err := "password and verify password is not same"
 		return ResponseModels.Response{Message: "failed to create user", Error: err}, errors.New(err)
+	}
+
+	// Check the password meet the requirements.
+	err := verifyPasswordFormat(registeredUser.Password)
+	if err != nil {
+		errorMessage := "password doesn't meet the requirements"
+		response := ErrorResponse("failed to create user", errorMessage)
+		return response, errors.New(errorMessage)
 	}
 
 	user := UserModels.User{
@@ -66,6 +75,37 @@ func CreateUser(registeredUser UserModels.RegisterModel) (ResponseModels.Respons
 func saltAndHash(password string) (string, error) {
 	hash, err := bcrypt.GenerateFromPassword([]byte(password), bcrypt.MinCost)
 	return string(hash), err
+}
+
+func verifyPasswordFormat(s string) error {
+	fmt.Println("Verifying password format.")
+	letters := 0
+	number := false
+	upper := false
+	special := false
+	for _, c := range s {
+		switch {
+		case unicode.IsNumber(c):
+			number = true
+			letters++
+		case unicode.IsUpper(c):
+			upper = true
+			letters++
+		case unicode.IsPunct(c) || unicode.IsSymbol(c):
+			special = true
+			letters++
+		case unicode.IsLetter(c) || c == ' ':
+			letters++
+		default:
+			letters++
+		}
+	}
+	eightOrMore := letters >= 8
+	fmt.Println("Number: ", number, "Upper:", upper, "Special: ", special, "eightOrMore: ", letters)
+	if number && upper && special && eightOrMore {
+		return nil
+	}
+	return errors.New("password doesn't meet the requirements")
 }
 
 func verifyPassword(hashedPwd string, plainPwd []byte) bool {
